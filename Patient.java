@@ -1,18 +1,49 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
+public class Patient {
+    private int patientID;
+    private String dob;
+    private String patientName;
 
-public class Patient extends User {
-    String dateOfBirth;
-
-    public Patient(String email, String username, String password_hash, String dateOfBirth) {
-        super(email, username, password_hash, 4); // UserTypeCode for Patient is 4
-        this.dateOfBirth = dateOfBirth;
+    public Patient(String dob, String patientName) {
+        this.dob = dob;
+        this.patientName = patientName;
     }
 
-    // Add methods specific to patients...
+    public void registerPatient() {
+        Connection connection = null;
+        try {
+            connection = connectToDatabase();
+            addUser(); // Use the common addUser method from the User class
 
-    @Override
-    void addUser() {
-        // You can add patient-specific logic here if needed
-        super.addUser(); // Call the parent method for common user addition logic
+            String patientQuery = "INSERT INTO Patient (DOB, PatientName) VALUES (?, ?)";
+            PreparedStatement statement = connection.prepareStatement(patientQuery);
+            statement.setString(1, dob);
+            statement.setString(2, patientName);
+            statement.executeUpdate();
+
+            System.out.println("Patient registered successfully");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            closeConnection(connection);
+        }
+    }
+
+    // Add other patient-related methods as needed...
+
+    private void addUser() {
+        // Implement addUser method from the User class as needed
+    }
+
+    private Connection connectToDatabase() throws SQLException {
+        // Implement connectToDatabase method from the User class as needed
+        return null;
+    }
+
+    private void closeConnection(Connection connection) {
+        // Implement closeConnection method from the User class as needed
     }
 }

@@ -53,7 +53,7 @@ public class RegistrationDialog extends JDialog {
         String password = passwordField.getText();
         int userType = (int) userTypeComboBox.getSelectedItem();
 
-        User user = new User(email, username, password, userType);
+        User user = new User(email, username, password,  userType);
         
         switch (userType) {
             case 4:
@@ -63,10 +63,10 @@ public class RegistrationDialog extends JDialog {
                 user.registerDoctor(expertise);
                 break;
             case 3:
-                user.registerNurse();
+                user.registerNurse(password);
                 break;
             case 1:
-                user.registerManager();
+                user.registerManager(password);
                 break;
         }
 
