@@ -5,7 +5,9 @@ import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Base64;
 
 public class User {
@@ -24,7 +26,7 @@ public class User {
         this.password_salt = generateSalt();
 
         // Hash the password with the salt
-        this.password_hash = hashPassword(password, this.password_salt);
+        this.password_hash = PasswordUtils.hashPassword(password, password_salt);
     }
 
     // Other methods for general user operations...
@@ -51,24 +53,49 @@ public class User {
 
     // Other methods for general user operations...
 
-    public void registerPatient(String dob) {
-        Connection connection = null;
-        try {
-            connection = connectToDatabase();
-            addUser(); // Use the common addUser method
+    public void registerPatient(String patientName, String dob) {
+    Connection connection = null;
+    PreparedStatement statement = null;
+    ResultSet generatedKeys = null;
 
-            String patientQuery = "INSERT INTO patient (PatientID, DOB) VALUES (LAST_INSERT_ID(), ?)";
-            PreparedStatement statement = connection.prepareStatement(patientQuery);
-            statement.setString(1, dob);
+    try {
+        connection = connectToDatabase();
+
+        // Insert into the user table
+        String userQuery = "INSERT INTO user (email, username, password_hash, password_salt, UserTypeCode) VALUES (?, ?, ?, ?, ?)";
+        statement = connection.prepareStatement(userQuery, Statement.RETURN_GENERATED_KEYS);
+        statement.setString(1, email);
+        statement.setString(2, username);
+        statement.setString(3, password_hash);
+        statement.setString(4, password_salt);
+        statement.setInt(5, userTypeCode);
+        statement.executeUpdate();
+
+        // Retrieve the generated UserID
+        generatedKeys = statement.getGeneratedKeys();
+        if (generatedKeys.next()) {
+            int generatedUserID = generatedKeys.getInt(1);
+
+            // Use the generated UserID for inserting into the patient table
+            String patientQuery = "INSERT INTO patient (PatientID, DOB, PatientName) VALUES (?, ?, ?)";
+            statement = connection.prepareStatement(patientQuery);
+            statement.setInt(1, generatedUserID);
+            statement.setString(2, dob);
+            statement.setString(3, patientName);
             statement.executeUpdate();
 
             System.out.println("Patient registered successfully");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeConnection(connection);
+        } else {
+            System.out.println("Failed to retrieve generated UserID");
         }
+    } catch (SQLException e) {
+        e.printStackTrace();
+    } finally {
+        closeConnection(connection);
+        closeStatement(statement);
+        closeResultSet(generatedKeys);
     }
+}
 
     public void registerDoctor(String expertise) {
         Connection connection = null;
@@ -136,16 +163,7 @@ public class User {
         return Base64.getEncoder().encodeToString(salt);
     }
 
-    private String hashPassword(String password, String salt) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashedBytes = digest.digest((password + salt).getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hashedBytes);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+    
 
     protected Connection connectToDatabase() throws SQLException {
         String url = "jdbc:mysql://localhost:3306/cs202_project";
@@ -158,6 +176,26 @@ public class User {
         try {
             if (connection != null) {
                 connection.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void closeStatement(PreparedStatement statement) {
+        try {
+            if (statement != null) {
+                statement.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void closeResultSet(ResultSet resultSet) {
+        try {
+            if (resultSet != null) {
+                resultSet.close();
             }
         } catch (SQLException e) {
             e.printStackTrace();

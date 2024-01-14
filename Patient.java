@@ -1,5 +1,6 @@
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class Patient {
@@ -10,33 +11,17 @@ public class Patient {
     public Patient(String dob, String patientName) {
         this.dob = dob;
         this.patientName = patientName;
+        
     }
 
-    public void registerPatient() {
-        Connection connection = null;
-        try {
-            connection = connectToDatabase();
-            addUser(); // Use the common addUser method from the User class
-
-            String patientQuery = "INSERT INTO Patient (DOB, PatientName) VALUES (?, ?)";
-            PreparedStatement statement = connection.prepareStatement(patientQuery);
-            statement.setString(1, dob);
-            statement.setString(2, patientName);
-            statement.executeUpdate();
-
-            System.out.println("Patient registered successfully");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            closeConnection(connection);
-        }
-    }
-
+    
     // Add other patient-related methods as needed...
 
-    private void addUser() {
-        // Implement addUser method from the User class as needed
-    }
+
+
+   
+
+    
 
     private Connection connectToDatabase() throws SQLException {
         // Implement connectToDatabase method from the User class as needed
@@ -45,5 +30,35 @@ public class Patient {
 
     private void closeConnection(Connection connection) {
         // Implement closeConnection method from the User class as needed
+    }
+
+
+    public int getPatientID() {
+        return patientID;
+    }
+
+
+    public void setPatientID(int patientID) {
+        this.patientID = patientID;
+    }
+
+
+    public String getDob() {
+        return dob;
+    }
+
+
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+
+
+    public String getPatientName() {
+        return patientName;
+    }
+
+
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
     }
 }
